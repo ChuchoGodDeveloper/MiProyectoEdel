@@ -8,13 +8,13 @@
 
     <div class="form-group" id="nombre-group">
       <%= f.label :nombre, "Nombre(s)", class: "form-label" %>
-      <%= f.text_field :nombre, class: "form-control", id: "nombre", placeholder: "Ej: Juan Carlos", required: true %>
+      <%= f.text_field :nombre, class: "form-control", id: "nombre", placeholder: "Ej: Juan Carlos", required: true, maxlength: 50, oninput: "this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '')" %>
       <div class="error-message" id="nombre-error"></div>
     </div>
 
     <div class="form-group" id="apellidos-group">
       <%= f.label :apellidos, "Apellidos", class: "form-label" %>
-      <%= f.text_field :apellidos, class: "form-control", id: "apellidos", placeholder: "Ej: Pérez García", required: true %>
+      <%= f.text_field :apellidos, class: "form-control", id: "apellidos", placeholder: "Ej: Pérez García", required: true, maxlength: 50, oninput: "this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '')" %>
       <div class="error-message" id="apellidos-error"></div>
     </div>
 
