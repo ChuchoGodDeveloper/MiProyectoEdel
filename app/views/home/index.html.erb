@@ -1,0 +1,398 @@
+<div class="home-container">
+  <section class="gallery-section">
+    <h2>Galería</h2>
+    
+    <div class="carousel-container">
+      <div class="carousel-slides">
+        <% if @gallery_images.any? %>
+          <% @gallery_images.each_with_index do |image, index| %>
+            <div class="carousel-slide <%= 'active' if index == 0 %>" style="position: relative;">
+              
+              <% if image.image.attached? %>
+                <%= image_tag image.image, alt: image.title || "Imagen #{index+1}" %>
+                
+                <%= button_to "Eliminar", gallery_image_path(image), 
+                    method: :delete, 
+                    class: "btn-delete-carousel", 
+                    form: { style: "position: absolute; top: 15px; right: 15px; z-index: 20;" },
+                    data: { turbo_confirm: "¿Estás seguro de que deseas eliminar esta imagen?" } %>
+              <% else %>
+                <img src="https://picsum.photos/1200/500?text=Error+de+Imagen" alt="Error de imagen">
+              <% end %>
+
+            </div>
+          <% end %>
+        <% else %>
+          <div class="carousel-slide active">
+            <img src="https://picsum.photos/1200/500?random=1" alt="Imagen 1">
+          </div>
+          <div class="carousel-slide">
+            <img src="https://picsum.photos/1200/500?random=2" alt="Imagen 2">
+          </div>
+          <div class="carousel-slide">
+            <img src="https://picsum.photos/1200/500?random=3" alt="Imagen 3">
+          </div>
+        <% end %>
+      </div>
+
+      <button class="carousel-control prev" id="prevSlide">&#10094;</button>
+      <button class="carousel-control next" id="nextSlide">&#10095;</button>
+
+      <div class="carousel-indicators">
+        <% total_slides = @gallery_images.any? ? @gallery_images.count : 3 %>
+        <% total_slides.times do |i| %>
+          <span class="indicator <%= 'active' if i == 0 %>" data-index="<%= i %>"></span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="upload-form">
+      <h3>Agregar nueva imagen al carrusel</h3>
+      <%= form_with model: GalleryImage.new, url: gallery_images_path, local: true, multipart: true, class: "upload-form-inline" do |f| %>
+        <div class="form-group">
+          <%= f.label :image, "Seleccionar imagen" %>
+          <%= f.file_field :image, accept: 'image/*', required: true, class: "form-control-file" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :title, "Título (opcional)" %>
+          <%= f.text_field :title, placeholder: "Ej: Paisaje", class: "form-control" %>
+        </div>
+        <%= f.submit "Agregar imagen", class: "btn btn-primary" %>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="users-module">
+    <h2>Usuarios</h2>
+    <div class="users-card">
+      <p>Total de usuarios registrados: <strong><%= Usuario.count %></strong></p>
+      <%= link_to "Ver todos los usuarios", usuarios_path, class: "btn btn-secondary" %>
+    </div>
+  </section>
+
+  <section class="recaptcha-test-module" style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 30px; margin-top: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <h2>Prueba de validación reCAPTCHA</h2>
+    <p style="color: #555; margin-bottom: 20px;"></p>
+    
+    <%= form_with url: probar_captcha_path, method: :post, local: true do |f| %>
+      <div style="margin-bottom: 20px; display: flex; justify-content: center;">
+        <%= recaptcha_tags %>
+      </div>
+      <div style="text-align: center;">
+        <%= f.submit "Verificar si soy humano", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+
+    <div style="text-align: center;">
+      <% if flash[:notice] %>
+        <p style="color: #28a745; margin-top: 15px; font-weight: bold;"><%= flash[:notice] %></p>
+      <% elsif flash[:alert] %>
+        <p style="color: #dc3545; margin-top: 15px; font-weight: bold;"><%= flash[:alert] %></p>
+      <% end %>
+    </div>
+  </section>
+
+</div>
+
+<style>
+  .home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  section {
+    margin-bottom: 40px;
+  }
+
+  h2 {
+    color: #333;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .carousel-container {
+    position: relative;
+    max-width: 100%;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+
+  .carousel-slides {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .carousel-slide {
+    flex: 0 0 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .carousel-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+    z-index: 10;
+  }
+
+  .carousel-control:hover {
+    background: rgba(0,0,0,0.8);
+  }
+
+  .carousel-control.prev {
+    left: 20px;
+  }
+
+  .carousel-control.next {
+    right: 20px;
+  }
+
+  .carousel-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+  }
+
+  .indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  .indicator.active {
+    background: white;
+    transform: scale(1.2);
+  }
+
+  .indicator:hover {
+    background: rgba(255,255,255,0.9);
+  }
+
+  .upload-form {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+    border: 1px solid #eaeaea;
+  }
+
+  .upload-form h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.2rem;
+  }
+
+  .upload-form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+  }
+
+  .form-group {
+    flex: 1 1 200px;
+    min-width: 200px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+  }
+
+  .form-control-file {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+    margin-top: 0;
+  }
+    
+  .btn:hover {
+    transform: translateY(-1px);
+    background-color: #0056b3;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+
+  .users-card {
+    background: white;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .users-card p {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 20px;
+  }
+
+  .users-card p strong {
+    color: #007bff;
+    font-size: 1.5rem;
+  }
+
+  .btn-delete-carousel {
+    background-color: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .btn-delete-carousel:hover {
+    background-color: rgba(220, 53, 69, 1);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.querySelectorAll('.carousel-slide');
+    const slidesContainer = document.querySelector('.carousel-slides');
+    const prevButton = document.getElementById('prevSlide');
+    const nextButton = document.getElementById('nextSlide');
+    const indicators = document.querySelectorAll('.indicator');
+    let currentIndex = 0;
+    let autoSlideInterval;
+    const totalSlides = slides.length;
+
+    if (totalSlides === 0) return;
+
+    function updateCarousel(index) {
+      if (index < 0) index = totalSlides - 1;
+      if (index >= totalSlides) index = 0;
+      
+      slidesContainer.style.transform = `translateX(-${index * 100}%)`;
+      
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+      });
+      
+      indicators.forEach((indicator, i) => {
+        indicator.classList.toggle('active', i === index);
+      });
+      
+      currentIndex = index;
+    }
+
+    prevButton.addEventListener('click', () => {
+      updateCarousel(currentIndex - 1);
+      resetAutoSlide();
+    });
+
+    nextButton.addEventListener('click', () => {
+      updateCarousel(currentIndex + 1);
+      resetAutoSlide();
+    });
+
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        updateCarousel(index);
+        resetAutoSlide();
+      });
+    });
+
+    function startAutoSlide() {
+      autoSlideInterval = setInterval(() => {
+        updateCarousel(currentIndex + 1);
+      }, 5000);
+    }
+
+    function resetAutoSlide() {
+      clearInterval(autoSlideInterval);
+      startAutoSlide();
+    }
+
+    const carousel = document.querySelector('.carousel-container');
+    carousel.addEventListener('mouseenter', () => {
+      clearInterval(autoSlideInterval);
+    });
+
+    carousel.addEventListener('mouseleave', () => {
+      startAutoSlide();
+    });
+
+    startAutoSlide();
+  });
+</script>

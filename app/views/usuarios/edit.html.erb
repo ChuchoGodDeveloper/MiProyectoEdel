@@ -1,0 +1,289 @@
+<div class="container">
+  <div class="header">
+    <h2>Editar Usuario</h2>
+    <%= link_to "Volver a Usuarios", usuarios_path, class: "btn btn-secondary" %>
+  </div>
+
+  <!-- FORMULARIO DE ACTUALIZACIÓN -->
+  <%= form_with(model: @usuario, local: true, class: "user-form", id: "user-form") do |f| %>
+
+    <div class="form-group" id="nombre-group">
+      <%= f.label :nombre, "Nombre(s)", class: "form-label" %>
+      <%= f.text_field :nombre, class: "form-control", id: "nombre", placeholder: "Ej: Juan Carlos", required: true %>
+      <div class="error-message" id="nombre-error"></div>
+    </div>
+
+    <div class="form-group" id="apellidos-group">
+      <%= f.label :apellidos, "Apellidos", class: "form-label" %>
+      <%= f.text_field :apellidos, class: "form-control", id: "apellidos", placeholder: "Ej: Pérez García", required: true %>
+      <div class="error-message" id="apellidos-error"></div>
+    </div>
+
+    <div class="form-group" id="telefono-group">
+      <%= f.label :telefono, "Teléfono", class: "form-label" %>
+      <%= f.text_field :telefono, class: "form-control", id: "telefono", placeholder: "10 dígitos (solo números)", required: true %>
+      <div class="error-message" id="telefono-error"></div>
+    </div>
+
+    <div class="form-group" id="correo-group">
+      <%= f.label :correo, "Correo electrónico", class: "form-label" %>
+      <%= f.email_field :correo, class: "form-control", id: "correo", placeholder: "ejemplo@correo.com", required: true %>
+      <div class="error-message" id="correo-error"></div>
+    </div>
+
+    <div class="form-group" id="fecha_nacimiento-group">
+      <%= f.label :fecha_nacimiento, "Fecha de nacimiento", class: "form-label" %>
+      <%= f.date_field :fecha_nacimiento, class: "form-control", id: "fecha_nacimiento", required: true %>
+      <div class="error-message" id="fecha_nacimiento-error"></div>
+    </div>
+
+    <div class="form-actions">
+      <%= f.submit "Actualizar Usuario", class: "btn btn-primary", id: "submit-btn" %>
+      <%= link_to "Cancelar", usuarios_path, class: "btn btn-secondary" %>
+    </div>
+
+  <% end %>
+
+  <!-- BOTÓN ELIMINAR FUERA DEL FORM -->
+  <div class="delete-section">
+    <%= button_to "Eliminar Usuario",
+                  @usuario,
+                  method: :delete,
+                  class: "btn btn-delete",
+                  data: { turbo_confirm: "¿Estás seguro?" } %>
+  </div>
+</div>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+
+  .btn-delete {
+    background-color: #dc3545;
+    color: white;
+    margin-top: 20px;
+  }
+
+  .btn-delete:hover {
+    background-color: #c82333;
+  }
+
+  .user-form {
+    background: white;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 30px;
+  }
+
+  .delete-section {
+    text-align: right;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Estilos para mensajes de error */
+  .error-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 5px;
+    min-height: 20px;
+  }
+
+  .form-control.error {
+    border-color: #dc3545;
+  }
+
+  .form-control.error:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220,53,69,0.1);
+  }
+</style>
+
+<script>
+  (function() {
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('user-form');
+      const nombre = document.getElementById('nombre');
+      const apellidos = document.getElementById('apellidos');
+      const telefono = document.getElementById('telefono');
+      const correo = document.getElementById('correo');
+      const fecha = document.getElementById('fecha_nacimiento');
+
+      // Expresiones regulares
+      const namePattern = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]*(?:[ '-][A-ZÁÉÍÓÚÑ][a-záéíóúñ]*)*$/;
+      const phonePattern = /^\d{10}$/;
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      function showError(input, message) {
+        const group = input.closest('.form-group');
+        const errorDiv = group.querySelector('.error-message');
+        input.classList.add('error');
+        errorDiv.textContent = message;
+        return false;
+      }
+
+      function clearError(input) {
+        const group = input.closest('.form-group');
+        const errorDiv = group.querySelector('.error-message');
+        input.classList.remove('error');
+        errorDiv.textContent = '';
+        return true;
+      }
+
+      function validateNombre() {
+        const val = nombre.value.trim();
+        if (val === '') return showError(nombre, 'El nombre es obligatorio.');
+        if (!namePattern.test(val)) return showError(nombre, 'Cada nombre debe comenzar con mayúscula y contener solo letras (ej: Juan Carlos, María José).');
+        return clearError(nombre);
+      }
+
+      function validateApellidos() {
+        const val = apellidos.value.trim();
+        if (val === '') return showError(apellidos, 'Los apellidos son obligatorios.');
+        if (!namePattern.test(val)) return showError(apellidos, 'Cada apellido debe comenzar con mayúscula y contener solo letras (ej: Pérez García).');
+        return clearError(apellidos);
+      }
+
+      function validateTelefono() {
+        let val = telefono.value.trim();
+        val = val.replace(/\D/g, '');
+        telefono.value = val;
+        if (val === '') return showError(telefono, 'El teléfono es obligatorio.');
+        if (!phonePattern.test(val)) return showError(telefono, 'El teléfono debe tener exactamente 10 dígitos (solo números).');
+        return clearError(telefono);
+      }
+
+      function validateCorreo() {
+        const val = correo.value.trim();
+        if (val === '') return showError(correo, 'El correo es obligatorio.');
+        if (!emailPattern.test(val)) return showError(correo, 'Ingresa un correo electrónico válido (ej: nombre@dominio.com).');
+        return clearError(correo);
+      }
+
+      function validateFecha() {
+        const val = fecha.value;
+        if (!val) return showError(fecha, 'La fecha de nacimiento es obligatoria.');
+        const birthDate = new Date(val);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        if (birthDate > today) return showError(fecha, 'La fecha no puede ser futura.');
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+        if (age < 18) return showError(fecha, 'Debes ser mayor de 18 años.');
+        return clearError(fecha);
+      }
+
+      // Filtro para teléfono
+      telefono.addEventListener('input', function(e) {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        clearError(this);
+      });
+
+      // Validar en blur
+      nombre.addEventListener('blur', validateNombre);
+      apellidos.addEventListener('blur', validateApellidos);
+      telefono.addEventListener('blur', validateTelefono);
+      correo.addEventListener('blur', validateCorreo);
+      fecha.addEventListener('blur', validateFecha);
+
+      // Validar al enviar
+      form.addEventListener('submit', function(event) {
+        let isValid = true;
+        isValid = validateNombre() && isValid;
+        isValid = validateApellidos() && isValid;
+        isValid = validateTelefono() && isValid;
+        isValid = validateCorreo() && isValid;
+        isValid = validateFecha() && isValid;
+
+        if (!isValid) {
+          event.preventDefault();
+          const firstError = document.querySelector('.form-control.error');
+          if (firstError) firstError.focus();
+        }
+      });
+
+      // Limpiar errores al escribir
+      [nombre, apellidos, correo, fecha].forEach(input => {
+        input.addEventListener('input', function() {
+          clearError(this);
+        });
+      });
+    });
+  })();
+</script>
