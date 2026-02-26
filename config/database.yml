@@ -23,3 +23,6 @@ production:
     url: <%= ENV['DATABASE_URL'] %>
   cable:
     <<: *production_primary
+  queue:
+    <<: *production_primary
+    migrations_paths: db/queue_migrate
