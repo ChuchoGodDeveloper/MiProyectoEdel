@@ -1,6 +1,10 @@
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
+
+  # Al principio del bloque configure
+config.logger = ActiveSupport::Logger.new($stdout)
+config.log_level = :debug
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.
