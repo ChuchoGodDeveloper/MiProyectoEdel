@@ -5,50 +5,54 @@
   </div>
 
   <div class="search-container">
-    <%= form_with url: usuarios_path, method: :get, local: true, class: "search-form" do |form| %>
-      <%= form.label :letra, "Filtrar por inicial:", class: "search-label" %>
-      <%= form.text_field :letra, value: params[:letra], placeholder: "Ej. A", class: "search-input", maxlength: 1 %>
-      <%= form.submit "Buscar", class: "btn btn-primary" %>
+    <%= form_with url: usuarios_path, method: :get, data: { turbo_frame: "tabla_usuarios" }, class: "search-form" do |form| %>
+      <%= form.label :query, "Buscar usuario:", class: "search-label" %>
+      <%= form.text_field :query, 
+            value: params[:query], 
+            placeholder: "Ej. Carlos, Martinez...", 
+            class: "search-input",
+            oninput: "this.form.requestSubmit()" %>
       
-      <% if params[:letra].present? %>
-        <%= link_to "Limpiar", usuarios_path, class: "btn btn-secondary" %>
-      <% end %>
+      <%# El botón submit lo ocultamos porque ahora busca al teclear %>
+      <%= form.submit "Buscar", style: "display: none;" %>
     <% end %>
   </div>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Apellidos</th>
-        <th>Teléfono</th>
-        <th>Correo</th>
-        <th>Fecha Nacimiento</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% if @usuarios.any? %>
-        <% @usuarios.each do |usuario| %>
+  <%= turbo_frame_tag "tabla_usuarios" do %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellidos</th>
+          <th>Teléfono</th>
+          <th>Correo</th>
+          <th>Fecha Nacimiento</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @usuarios.any? %>
+          <% @usuarios.each do |usuario| %>
+            <tr>
+              <td><%= usuario.nombre %></td>
+              <td><%= usuario.apellidos %></td>
+              <td><%= usuario.telefono %></td>
+              <td><%= usuario.correo %></td>
+              <td><%= usuario.fecha_nacimiento %></td>
+              <td class="actions">
+                <%= link_to "Editar", edit_usuario_path(usuario), class: "btn btn-edit", data: { turbo_frame: "_top" } %>
+                <%= button_to "Eliminar", usuario_path(usuario), method: :delete, class: "btn btn-delete", form: { class: 'inline' }, data: { turbo_frame: "_top" } %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
           <tr>
-            <td><%= usuario.nombre %></td>
-            <td><%= usuario.apellidos %></td>
-            <td><%= usuario.telefono %></td>
-            <td><%= usuario.correo %></td>
-            <td><%= usuario.fecha_nacimiento %></td>
-            <td class="actions">
-              <%= link_to "Editar", edit_usuario_path(usuario), class: "btn btn-edit" %>
-              <%= button_to "Eliminar", usuario_path(usuario), method: :delete, class: "btn btn-delete", form: { class: 'inline' } %>
-            </td>
+            <td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados para "<%= params[:query] %>"</td>
           </tr>
         <% end %>
-      <% else %>
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 20px;">No se encontraron usuarios con esa letra.</td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  <% end %>
 </div>
 
 <style>
@@ -83,20 +87,16 @@
     color: #333;
   }
   .search-input {
-    padding: 8px;
+    padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    width: 60px;
-    text-align: center;
+    width: 250px; /* Más ancho para nombres completos */
     font-size: 16px;
-    text-transform: uppercase;
   }
-  .btn-secondary {
-    background-color: #6c757d;
-    color: white;
-  }
-  .btn-secondary:hover {
-    background-color: #5a6268;
+  .search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0,123,255,0.3);
   }
   /* ---------------------------- */
 
