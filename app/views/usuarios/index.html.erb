@@ -4,21 +4,36 @@
     <%= link_to "Nuevo Usuario", new_usuario_path, class: "btn btn-primary" %>
   </div>
 
-  <div class="search-container">
-    <%= form_with url: usuarios_path, method: :get, data: { turbo_frame: "tabla_usuarios" }, class: "search-form" do |form| %>
+  <div class="search-container" 
+       data-controller="search"
+       data-search-url-value="<%= usuarios_path %>">
+    
+    <%= form_with url: usuarios_path, 
+                  method: :get, 
+                  data: { 
+                    turbo_frame: "tabla_usuarios",
+                    search_target: "form"
+                  }, 
+                  class: "search-form" do |form| %>
+      
       <%= form.label :query, "Buscar usuario:", class: "search-label" %>
       <%= form.text_field :query, 
             value: params[:query], 
             placeholder: "Ej. Carlos, Martinez...", 
             class: "search-input",
-            oninput: "this.form.requestSubmit()" %>
+            data: { 
+              search_target: "input",
+              action: "input->search#search"
+            } %>
       
       <%# El botón submit lo ocultamos porque ahora busca al teclear %>
       <%= form.submit "Buscar", style: "display: none;" %>
     <% end %>
   </div>
 
-  <%= turbo_frame_tag "tabla_usuarios" do %>
+  <%= turbo_frame_tag "tabla_usuarios", data: { 
+        action: "turbo:before-fetch-response->search#restoreFocus" 
+      } do %>
     <table class="table">
       <thead>
         <tr>
@@ -90,7 +105,7 @@
     padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    width: 250px; /* Más ancho para nombres completos */
+    width: 250px;
     font-size: 16px;
   }
   .search-input:focus {
