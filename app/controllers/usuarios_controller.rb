@@ -1,7 +1,11 @@
 class UsuariosController < ApplicationController
 
   def index
-    @usuarios = Usuario.all
+    if params[:letra].present?
+      @usuarios = Usuario.where("LOWER(nombre) LIKE LOWER(?)", "#{params[:letra]}%")
+    else
+      @usuarios = Usuario.all
+    end
   end
 
   def new
