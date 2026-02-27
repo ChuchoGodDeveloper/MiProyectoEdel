@@ -1,159 +1,53 @@
-<div class="container">
-  <div class="header">
-    <h2>Lista de Usuarios</h2>
-    <%= link_to "Nuevo Usuario", new_usuario_path, class: "btn btn-primary" %>
-  </div>
+class UsuariosController < ApplicationController
 
-  <div class="search-container">
-    <%= form_with url: usuarios_path, method: :get, data: { turbo_frame: "tabla_usuarios" }, class: "search-form" do |form| %>
-      <%= form.label :query, "Buscar usuario:", class: "search-label" %>
-      <%= form.text_field :query, 
-            value: params[:query], 
-            placeholder: "Ej. Carlos, Martinez...", 
-            class: "search-input",
-            oninput: "this.form.requestSubmit()" %>
-      
-      <%# El botón submit lo ocultamos porque ahora busca al teclear %>
-      <%= form.submit "Buscar", style: "display: none;" %>
-    <% end %>
-  </div>
+  def index
+    if params[:query].present?
+      # Busca coincidencias sin importar mayúsculas/minúsculas en nombre O apellidos
+      termino = "%#{params[:query]}%"
+      @usuarios = Usuario.where("LOWER(nombre) LIKE LOWER(:t) OR LOWER(apellidos) LIKE LOWER(:t)", t: termino)
+    else
+      @usuarios = Usuario.all
+    end
+  end
 
-  <%= turbo_frame_tag "tabla_usuarios" do %>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Apellidos</th>
-          <th>Teléfono</th>
-          <th>Correo</th>
-          <th>Fecha Nacimiento</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if @usuarios.any? %>
-          <% @usuarios.each do |usuario| %>
-            <tr>
-              <td><%= usuario.nombre %></td>
-              <td><%= usuario.apellidos %></td>
-              <td><%= usuario.telefono %></td>
-              <td><%= usuario.correo %></td>
-              <td><%= usuario.fecha_nacimiento %></td>
-              <td class="actions">
-                <%= link_to "Editar", edit_usuario_path(usuario), class: "btn btn-edit", data: { turbo_frame: "_top" } %>
-                <%= button_to "Eliminar", usuario_path(usuario), method: :delete, class: "btn btn-delete", form: { class: 'inline' }, data: { turbo_frame: "_top" } %>
-              </td>
-            </tr>
-          <% end %>
-        <% else %>
-          <tr>
-            <td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados para "<%= params[:query] %>"</td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% end %>
-</div>
+  def new
+    @usuario = Usuario.new
+  end
 
-<style>
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  /* --- Estilos del Buscador --- */
-  .search-container {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-  }
-  .search-form {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-  .search-label {
-    font-weight: bold;
-    color: #333;
-  }
-  .search-input {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 250px; /* Más ancho para nombres completos */
-    font-size: 16px;
-  }
-  .search-input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0,123,255,0.3);
-  }
-  /* ---------------------------- */
+  def create
+    @usuario = Usuario.new(usuario_params)
 
-  .btn {
-    display: inline-block;
-    padding: 8px 16px;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 14px;
-    border: none;
-    cursor: pointer;
-  }
-  .btn-primary {
-    background-color: #007bff;
-    color: white;
-  }
-  .btn-primary:hover {
-    background-color: #0056b3;
-  }
-  .btn-edit {
-    background-color: #ffc107;
-    color: black;
-    margin-right: 5px;
-  }
-  .btn-edit:hover {
-    background-color: #e0a800;
-  }
-  .btn-delete {
-    background-color: #dc3545;
-    color: white;
-  }
-  .btn-delete:hover {
-    background-color: #c82333;
-  }
-  table.table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  table.table th,
-  table.table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  table.table th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-  }
-  table.table tbody tr:hover {
-    background-color: #f5f5f5;
-  }
-  .actions {
-    white-space: nowrap;
-  }
-  .inline {
-    display: inline;
-  }
-</style>
+    if @usuario.save
+      redirect_to usuarios_path
+    else
+      render :new
+    end
+  end
+
+  def edit
+    @usuario = Usuario.find(params[:id])
+  end
+
+  def update
+    @usuario = Usuario.find(params[:id])
+
+    if @usuario.update(usuario_params)
+      redirect_to usuarios_path
+    else
+      render :edit
+    end
+  end
+
+  def destroy
+    @usuario = Usuario.find(params[:id])
+    @usuario.destroy
+    redirect_to usuarios_path
+  end
+
+  private
+
+  def usuario_params
+    params.require(:usuario).permit(:nombre, :apellidos, :telefono, :correo, :fecha_nacimiento)
+  end
+
+end
