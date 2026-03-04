@@ -4,36 +4,36 @@
     <%= link_to "Nuevo Usuario", new_usuario_path, class: "btn btn-primary" %>
   </div>
 
-  <div class="search-container" 
-       data-controller="search"
-       data-search-url-value="<%= usuarios_path %>">
-    
-    <%= form_with url: usuarios_path, 
-                  method: :get, 
-                  data: { 
-                    turbo_frame: "tabla_usuarios",
-                    search_target: "form"
-                  }, 
-                  class: "search-form" do |form| %>
+  <div class="search-container">
+    <%= form_with url: usuarios_path, method: :get, class: "search-form", id: "search-form" do |form| %>
       
-      <%= form.label :query, "Buscar usuario:", class: "search-label" %>
-      <%= form.text_field :query, 
-            value: params[:query], 
-            placeholder: "Ej. Carlos, Martinez...", 
-            class: "search-input",
-            data: { 
-              search_target: "input",
-              action: "input->search#search"
-            } %>
-      
-      <%# El botón submit lo ocultamos porque ahora busca al teclear %>
+      <div class="form-group">
+        <%= form.label :query, "Buscar usuario:", class: "search-label" %>
+        <%= form.text_field :query, 
+              value: params[:query], 
+              placeholder: "Ej. Carlos, Martinez...", 
+              class: "search-input",
+              id: "search-input",
+              autocomplete: "off" %> 
+      </div>
+
+      <div class="date-filters">
+        <div class="form-group">
+          <%= form.label :fecha_inicio, "Después de:", class: "search-label" %>
+          <%= form.date_field :fecha_inicio, value: params[:fecha_inicio], class: "search-input", id: "fecha-inicio" %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :fecha_fin, "Antes de:", class: "search-label" %>
+          <%= form.date_field :fecha_fin, value: params[:fecha_fin], class: "search-input", id: "fecha-fin" %>
+        </div>
+      </div>
+
       <%= form.submit "Buscar", style: "display: none;" %>
     <% end %>
   </div>
 
-  <%= turbo_frame_tag "tabla_usuarios", data: { 
-        action: "turbo:before-fetch-response->search#restoreFocus" 
-      } do %>
+  <div id="contenedor-tabla">
     <table class="table">
       <thead>
         <tr>
@@ -55,19 +55,23 @@
               <td><%= usuario.correo %></td>
               <td><%= usuario.fecha_nacimiento %></td>
               <td class="actions">
-                <%= link_to "Editar", edit_usuario_path(usuario), class: "btn btn-edit", data: { turbo_frame: "_top" } %>
-                <%= button_to "Eliminar", usuario_path(usuario), method: :delete, class: "btn btn-delete", form: { class: 'inline' }, data: { turbo_frame: "_top" } %>
+                <%= link_to "Editar", edit_usuario_path(usuario), class: "btn btn-edit" %>
+                <%= button_to "Eliminar", usuario_path(usuario), method: :delete, class: "btn btn-delete", form: { class: 'inline' }, data: { confirm: "¿Estás seguro de eliminar este usuario?" } %>
               </td>
             </tr>
           <% end %>
         <% else %>
           <tr>
-            <td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados para "<%= params[:query] %>"</td>
+            <td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados.</td>
           </tr>
         <% end %>
       </tbody>
     </table>
-  <% end %>
+
+    <div class="paginacion-container">
+      <%= paginate @usuarios %>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -84,7 +88,7 @@
     margin-bottom: 20px;
   }
   
-  /* --- Estilos del Buscador --- */
+  /* Mejoramos la distribución del buscador */
   .search-container {
     background-color: #f8f9fa;
     padding: 15px;
@@ -94,26 +98,41 @@
   }
   .search-form {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
   }
+  .form-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .date-filters {
+    display: flex;
+    gap: 20px;
+    border-left: 2px solid #ddd;
+    padding-left: 20px;
+  }
+  
   .search-label {
     font-weight: bold;
     color: #333;
+    white-space: nowrap;
   }
   .search-input {
     padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    width: 250px;
     font-size: 16px;
+  }
+  #search-input {
+    width: 250px;
   }
   .search-input:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 5px rgba(0,123,255,0.3);
   }
-  /* ---------------------------- */
 
   .btn {
     display: inline-block;
@@ -171,4 +190,98 @@
   .inline {
     display: inline;
   }
+
+  .paginacion-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+  }
+  .pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    gap: 8px;
+    align-items: center;
+  }
+  .pagination span.page, 
+  .pagination span.first, 
+  .pagination span.last, 
+  .pagination span.prev, 
+  .pagination span.next {
+    display: inline-block;
+  }
+  .pagination a, .pagination .current {
+    padding: 8px 14px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #007bff;
+    background-color: white;
+    transition: all 0.2s;
+  }
+  .pagination .current {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+  }
+  .pagination a:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+  }
 </style>
+
+<script>
+  (function() {
+    const inputTexto = document.getElementById("search-input");
+    const inputInicio = document.getElementById("fecha-inicio");
+    const inputFin = document.getElementById("fecha-fin");
+    
+    const formulario = document.getElementById("search-form");
+    const contenedorTabla = document.getElementById("contenedor-tabla");
+    let timeout = null;
+
+    if (formulario && contenedorTabla) {
+      // Evitamos el Enter
+      formulario.addEventListener("submit", function(e) {
+        e.preventDefault();
+      });
+
+      // Función que recolecta los 3 campos y hace la búsqueda
+      function realizarBusqueda() {
+        clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+          // Usamos URLSearchParams para armar la URL de forma segura y limpia
+          const parametros = new URLSearchParams();
+          
+          if (inputTexto.value) parametros.append("query", inputTexto.value);
+          if (inputInicio.value) parametros.append("fecha_inicio", inputInicio.value);
+          if (inputFin.value) parametros.append("fecha_fin", inputFin.value);
+
+          const url = `<%= usuarios_path %>?${parametros.toString()}`;
+
+          fetch(url)
+            .then(response => response.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, "text/html");
+              const nuevaTabla = doc.getElementById("contenedor-tabla");
+              
+              if (nuevaTabla) {
+                contenedorTabla.innerHTML = nuevaTabla.innerHTML;
+              }
+            })
+            .catch(error => console.error("Error al buscar:", error));
+        }, 300);
+      }
+
+      // Escuchamos cuando escribes texto
+      if (inputTexto) inputTexto.addEventListener("input", realizarBusqueda);
+      
+      // Escuchamos cuando cambias las fechas
+      if (inputInicio) inputInicio.addEventListener("change", realizarBusqueda);
+      if (inputFin) inputFin.addEventListener("change", realizarBusqueda);
+    }
+  })();
+</script>

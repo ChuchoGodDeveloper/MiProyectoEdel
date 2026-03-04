@@ -61,3 +61,5 @@ group :test do
 end
 
 gem 'recaptcha', require: 'recaptcha/rails'
+
+gem "kaminari", "~> 1.2"

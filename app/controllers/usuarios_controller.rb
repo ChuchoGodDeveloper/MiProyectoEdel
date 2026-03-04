@@ -1,13 +1,27 @@
 class UsuariosController < ApplicationController
 
   def index
+    # 1. Empezamos con todos los usuarios
+    @usuarios = Usuario.all
+
+    # 2. Si escribiste algo en el buscador de texto, filtramos por nombre/apellido
     if params[:query].present?
-      # Busca coincidencias sin importar mayúsculas/minúsculas en nombre O apellidos
       termino = "%#{params[:query]}%"
-      @usuarios = Usuario.where("LOWER(nombre) LIKE LOWER(:t) OR LOWER(apellidos) LIKE LOWER(:t)", t: termino)
-    else
-      @usuarios = Usuario.all
+      @usuarios = @usuarios.where("LOWER(nombre) LIKE LOWER(:t) OR LOWER(apellidos) LIKE LOWER(:t)", t: termino)
     end
+
+    # 3. Si pusiste una fecha en "Después de" (fecha_inicio)
+    if params[:fecha_inicio].present?
+      @usuarios = @usuarios.where("fecha_nacimiento >= ?", params[:fecha_inicio])
+    end
+
+    # 4. Si pusiste una fecha en "Antes de" (fecha_fin)
+    if params[:fecha_fin].present?
+      @usuarios = @usuarios.where("fecha_nacimiento <= ?", params[:fecha_fin])
+    end
+
+    # 5. Finalmente, aplicamos la paginación de Kaminari a los resultados que hayan quedado
+    @usuarios = @usuarios.page(params[:page]).per(7)
   end
 
   def new
