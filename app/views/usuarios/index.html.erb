@@ -56,7 +56,15 @@
               <td><%= usuario.fecha_nacimiento %></td>
               <td class="actions">
                 <%= link_to "Editar", edit_usuario_path(usuario), class: "btn btn-edit" %>
-                <%= button_to "Eliminar", usuario_path(usuario), method: :delete, class: "btn btn-delete", form: { class: 'inline' }, data: { confirm: "¿Estás seguro de eliminar este usuario?" } %>
+                
+                <%# SOLUCIÓN INFALIBLE: Usamos onsubmit nativo de JavaScript dentro del formulario del botón %>
+                <%= button_to "Eliminar", usuario_path(usuario), 
+                      method: :delete, 
+                      class: "btn btn-delete", 
+                      form: { 
+                        class: 'inline',
+                        onsubmit: "return confirm('¿Estás seguro de eliminar a #{usuario.nombre} #{usuario.apellidos}?');"
+                      } %>
               </td>
             </tr>
           <% end %>
@@ -277,17 +285,14 @@
       if (inputInicio) inputInicio.addEventListener("change", realizarBusqueda);
       if (inputFin) inputFin.addEventListener("change", realizarBusqueda);
 
-      // --- NUEVO CÓDIGO: INTERCEPTAR LA PAGINACIÓN ---
       contenedorTabla.addEventListener("click", function(e) {
-        // Verifica si lo que clickeaste fue un enlace de paginación
         const enlacePaginacion = e.target.closest(".pagination a");
 
         if (enlacePaginacion) {
-          e.preventDefault(); // Evita que el navegador recargue la página
+          e.preventDefault(); 
           
-          const url = enlacePaginacion.href; // Obtenemos la URL lista que generó Kaminari
+          const url = enlacePaginacion.href; 
 
-          // Usamos el mismo sistema Fetch en silencio
           fetch(url)
             .then(response => response.text())
             .then(html => {
