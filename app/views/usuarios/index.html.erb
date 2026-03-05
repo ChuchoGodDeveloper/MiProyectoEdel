@@ -88,7 +88,6 @@
     margin-bottom: 20px;
   }
   
-  /* Mejoramos la distribución del buscador */
   .search-container {
     background-color: #f8f9fa;
     padding: 15px;
@@ -242,17 +241,15 @@
     let timeout = null;
 
     if (formulario && contenedorTabla) {
-      // Evitamos el Enter
+      
       formulario.addEventListener("submit", function(e) {
         e.preventDefault();
       });
 
-      // Función que recolecta los 3 campos y hace la búsqueda
       function realizarBusqueda() {
         clearTimeout(timeout);
 
         timeout = setTimeout(() => {
-          // Usamos URLSearchParams para armar la URL de forma segura y limpia
           const parametros = new URLSearchParams();
           
           if (inputTexto.value) parametros.append("query", inputTexto.value);
@@ -276,12 +273,35 @@
         }, 300);
       }
 
-      // Escuchamos cuando escribes texto
       if (inputTexto) inputTexto.addEventListener("input", realizarBusqueda);
-      
-      // Escuchamos cuando cambias las fechas
       if (inputInicio) inputInicio.addEventListener("change", realizarBusqueda);
       if (inputFin) inputFin.addEventListener("change", realizarBusqueda);
+
+      // --- NUEVO CÓDIGO: INTERCEPTAR LA PAGINACIÓN ---
+      contenedorTabla.addEventListener("click", function(e) {
+        // Verifica si lo que clickeaste fue un enlace de paginación
+        const enlacePaginacion = e.target.closest(".pagination a");
+
+        if (enlacePaginacion) {
+          e.preventDefault(); // Evita que el navegador recargue la página
+          
+          const url = enlacePaginacion.href; // Obtenemos la URL lista que generó Kaminari
+
+          // Usamos el mismo sistema Fetch en silencio
+          fetch(url)
+            .then(response => response.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, "text/html");
+              const nuevaTabla = doc.getElementById("contenedor-tabla");
+              
+              if (nuevaTabla) {
+                contenedorTabla.innerHTML = nuevaTabla.innerHTML;
+              }
+            })
+            .catch(error => console.error("Error al paginar:", error));
+        }
+      });
     }
   })();
 </script>

@@ -4,24 +4,26 @@
     <%= link_to "Volver a Usuarios", usuarios_path, class: "btn btn-secondary" %>
   </div>
 
-  <!-- FORMULARIO DE ACTUALIZACIÓN -->
   <%= form_with(model: @usuario, local: true, class: "user-form", id: "user-form") do |f| %>
 
     <div class="form-group" id="nombre-group">
       <%= f.label :nombre, "Nombre(s)", class: "form-label" %>
-      <%= f.text_field :nombre, class: "form-control", id: "nombre", placeholder: "Ej: Juan Carlos", required: true %>
+      <%# Agregado maxlength de 50 %>
+      <%= f.text_field :nombre, class: "form-control", id: "nombre", placeholder: "Ej: Juan Carlos", required: true, maxlength: 50 %>
       <div class="error-message" id="nombre-error"></div>
     </div>
 
     <div class="form-group" id="apellidos-group">
       <%= f.label :apellidos, "Apellidos", class: "form-label" %>
-      <%= f.text_field :apellidos, class: "form-control", id: "apellidos", placeholder: "Ej: Pérez García", required: true %>
+      <%# Agregado maxlength de 50 %>
+      <%= f.text_field :apellidos, class: "form-control", id: "apellidos", placeholder: "Ej: Pérez García", required: true, maxlength: 50 %>
       <div class="error-message" id="apellidos-error"></div>
     </div>
 
     <div class="form-group" id="telefono-group">
       <%= f.label :telefono, "Teléfono", class: "form-label" %>
-      <%= f.text_field :telefono, class: "form-control", id: "telefono", placeholder: "10 dígitos (solo números)", required: true %>
+      <%# Agregado maxlength 10 y pattern de solo números %>
+      <%= f.text_field :telefono, class: "form-control", id: "telefono", placeholder: "10 dígitos (solo números)", required: true, maxlength: 10, pattern: "\\d{10}" %>
       <div class="error-message" id="telefono-error"></div>
     </div>
 
@@ -33,6 +35,7 @@
 
     <div class="form-group" id="fecha_nacimiento-group">
       <%= f.label :fecha_nacimiento, "Fecha de nacimiento", class: "form-label" %>
+      <%# El atributo 'max' se establecerá dinámicamente con JS para impedir seleccionar fechas menores a 18 años %>
       <%= f.date_field :fecha_nacimiento, class: "form-control", id: "fecha_nacimiento", required: true %>
       <div class="error-message" id="fecha_nacimiento-error"></div>
     </div>
@@ -44,7 +47,6 @@
 
   <% end %>
 
-  <!-- BOTÓN ELIMINAR FUERA DEL FORM -->
   <div class="delete-section">
     <%= button_to "Eliminar Usuario",
                   @usuario,
@@ -156,7 +158,6 @@
     margin: 0 auto;
   }
 
-  /* Estilos para mensajes de error */
   .error-message {
     color: #dc3545;
     font-size: 14px;
@@ -184,8 +185,19 @@
       const correo = document.getElementById('correo');
       const fecha = document.getElementById('fecha_nacimiento');
 
-      // Expresiones regulares
-      const namePattern = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]*(?:[ '-][A-ZÁÉÍÓÚÑ][a-záéíóúñ]*)*$/;
+      // Calcular la fecha máxima permitida (hoy menos 18 años)
+      const hoy = new Date();
+      let anioMaximo = hoy.getFullYear() - 18;
+      let mesMaximo = (hoy.getMonth() + 1).toString().padStart(2, '0');
+      let diaMaximo = hoy.getDate().toString().padStart(2, '0');
+      const fechaMaximaPermitida = `${anioMaximo}-${mesMaximo}-${diaMaximo}`;
+      
+      // Asignar el límite al calendario HTML para que bloquee días menores
+      fecha.setAttribute('max', fechaMaximaPermitida);
+
+      // Expresiones regulares actualizadas
+      // Acepta letras mayúsculas, minúsculas, espacios y acentos. No números ni símbolos raros.
+      const namePattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
       const phonePattern = /^\d{10}$/;
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -208,23 +220,23 @@
       function validateNombre() {
         const val = nombre.value.trim();
         if (val === '') return showError(nombre, 'El nombre es obligatorio.');
-        if (!namePattern.test(val)) return showError(nombre, 'Cada nombre debe comenzar con mayúscula y contener solo letras (ej: Juan Carlos, María José).');
+        if (!namePattern.test(val)) return showError(nombre, 'Solo se permiten letras y espacios.');
+        if (val.length > 50) return showError(nombre, 'Máximo 50 caracteres permitidos.');
         return clearError(nombre);
       }
 
       function validateApellidos() {
         const val = apellidos.value.trim();
         if (val === '') return showError(apellidos, 'Los apellidos son obligatorios.');
-        if (!namePattern.test(val)) return showError(apellidos, 'Cada apellido debe comenzar con mayúscula y contener solo letras (ej: Pérez García).');
+        if (!namePattern.test(val)) return showError(apellidos, 'Solo se permiten letras y espacios.');
+        if (val.length > 50) return showError(apellidos, 'Máximo 50 caracteres permitidos.');
         return clearError(apellidos);
       }
 
       function validateTelefono() {
-        let val = telefono.value.trim();
-        val = val.replace(/\D/g, '');
-        telefono.value = val;
+        const val = telefono.value.trim();
         if (val === '') return showError(telefono, 'El teléfono es obligatorio.');
-        if (!phonePattern.test(val)) return showError(telefono, 'El teléfono debe tener exactamente 10 dígitos (solo números).');
+        if (!phonePattern.test(val)) return showError(telefono, 'El teléfono debe tener exactamente 10 dígitos.');
         return clearError(telefono);
       }
 
@@ -238,31 +250,46 @@
       function validateFecha() {
         const val = fecha.value;
         if (!val) return showError(fecha, 'La fecha de nacimiento es obligatoria.');
+        
         const birthDate = new Date(val);
         const today = new Date();
         today.setHours(0,0,0,0);
-        if (birthDate > today) return showError(fecha, 'La fecha no puede ser futura.');
+        
         let age = today.getFullYear() - birthDate.getFullYear();
         const m = today.getMonth() - birthDate.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-        if (age < 18) return showError(fecha, 'Debes ser mayor de 18 años.');
+        
+        if (age < 18) return showError(fecha, 'Debes ser mayor de 18 años para registrarte.');
         return clearError(fecha);
       }
 
-      // Filtro para teléfono
+      // --- FILTROS DE ESCRITURA EN TIEMPO REAL ---
+
+      // Evita que escriban números o símbolos en nombre y apellidos
+      nombre.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 50);
+        clearError(this);
+      });
+
+      apellidos.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 50);
+        clearError(this);
+      });
+
+      // Evita que escriban letras en el teléfono y lo limita a 10
       telefono.addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '').slice(0, 10);
         clearError(this);
       });
 
-      // Validar en blur
+      // Validar en blur (cuando el usuario sale del campo)
       nombre.addEventListener('blur', validateNombre);
       apellidos.addEventListener('blur', validateApellidos);
       telefono.addEventListener('blur', validateTelefono);
       correo.addEventListener('blur', validateCorreo);
       fecha.addEventListener('blur', validateFecha);
 
-      // Validar al enviar
+      // Validar al enviar el formulario
       form.addEventListener('submit', function(event) {
         let isValid = true;
         isValid = validateNombre() && isValid;
@@ -272,14 +299,15 @@
         isValid = validateFecha() && isValid;
 
         if (!isValid) {
-          event.preventDefault();
+          event.preventDefault(); // Detiene el envío
+          // Hace scroll hacia el primer error
           const firstError = document.querySelector('.form-control.error');
           if (firstError) firstError.focus();
         }
       });
 
-      // Limpiar errores al escribir
-      [nombre, apellidos, correo, fecha].forEach(input => {
+      // Limpiar errores al escribir en correo y fecha
+      [correo, fecha].forEach(input => {
         input.addEventListener('input', function() {
           clearError(this);
         });

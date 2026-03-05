@@ -48,10 +48,12 @@
 
     <div class="upload-form">
       <h3>Agregar nueva imagen al carrusel</h3>
-      <%= form_with model: GalleryImage.new, url: gallery_images_path, local: true, multipart: true, class: "upload-form-inline" do |f| %>
+      <%# Agregamos un ID al formulario para tener mayor control %>
+      <%= form_with model: GalleryImage.new, url: gallery_images_path, local: true, multipart: true, class: "upload-form-inline", id: "form-subida-imagen" do |f| %>
         <div class="form-group">
           <%= f.label :image, "Seleccionar imagen" %>
-          <%= f.file_field :image, accept: 'image/*', required: true, class: "form-control-file" %>
+          <%# Cambiamos accept a extensiones específicas y agregamos un ID %>
+          <%= f.file_field :image, accept: 'image/png, image/jpeg, image/jpg, image/webp', required: true, class: "form-control-file", id: "input-archivo-imagen" %>
         </div>
         <div class="form-group">
           <%= f.label :title, "Título (opcional)" %>
@@ -328,6 +330,22 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // --- NUEVO: GUARDÍAN DE IMÁGENES ---
+    const inputImagen = document.getElementById('input-archivo-imagen');
+    if (inputImagen) {
+      inputImagen.addEventListener('change', function() {
+        const archivo = this.files[0];
+        if (archivo) {
+          // Verifica si el tipo de archivo comienza con "image/"
+          if (!archivo.type.startsWith('image/')) {
+            alert('Atención: Solo se permiten archivos de imagen (JPG, PNG, WEBP, etc.).');
+            this.value = ''; // Vacía el input automáticamente
+          }
+        }
+      });
+    }
+    // -----------------------------------
+
     const slides = document.querySelectorAll('.carousel-slide');
     const slidesContainer = document.querySelector('.carousel-slides');
     const prevButton = document.getElementById('prevSlide');
